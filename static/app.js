@@ -207,8 +207,17 @@
     clinScoreEl.style.color = clinicalColor(cc.completeness_score || 0);
     document.getElementById('stat-clinical-label').textContent = cc.completeness_label || '--';
 
-    // Words
-    document.getElementById('stat-words').textContent = (word_count || 0).toLocaleString();
+    // Info currency stat
+    const cur = data.currency_check || {};
+    const curScoreEl = document.getElementById('stat-currency-score');
+    curScoreEl.textContent = `${cur.currency_score != null ? cur.currency_score : '--'}%`;
+    curScoreEl.style.color = currencyColor(cur.currency_score || 0);
+    document.getElementById('stat-currency-label').textContent = cur.overall_currency || '--';
+
+    // Word count moved to subtitle
+    const wordSuffix = (word_count || 0).toLocaleString() + ' words';
+    const sub = document.getElementById('results-subtitle');
+    sub.textContent = sub.textContent ? sub.textContent + ' · ' + wordSuffix : wordSuffix;
 
     // ── Summary tab ──
     document.getElementById('full-summary').textContent = summary.full_summary;
@@ -363,6 +372,68 @@
 
     document.getElementById('clinical-summary').textContent = cc.summary || '';
 
+    // ── Info Currency tab ──
+    const curScoreCircle = document.getElementById('currency-score-circle');
+    const cscore = cur.currency_score || 0;
+    curScoreCircle.style.background = currencyColor(cscore);
+    document.getElementById('currency-score-num').textContent = cscore;
+    document.getElementById('currency-overall').textContent = cur.overall_currency || '--';
+
+    const curBadge = document.getElementById('currency-overall-badge');
+    curBadge.textContent = cur.overall_currency || '--';
+    curBadge.className = 'currency-overall-badge ' + currencyLabelClass(cur.overall_currency || '');
+
+    document.getElementById('currency-caveat-text').textContent =
+      cur.knowledge_cutoff_note || 'Verify critical recommendations against current clinical guidelines.';
+
+    // Outdated items
+    const outdatedItemsEl = document.getElementById('outdated-items-list');
+    outdatedItemsEl.innerHTML = '';
+    const outdatedItems = cur.outdated_items || [];
+    document.getElementById('outdated-items-section').hidden = outdatedItems.length === 0;
+    outdatedItems.forEach(item => {
+      const div = document.createElement('div');
+      div.className = 'outdated-item';
+      div.innerHTML = `
+        <div class="outdated-item-header">
+          <span class="severity-badge severity-${(item.severity || 'low').toLowerCase()}">${item.severity || 'Low'}</span>
+          <span class="outdated-claim">"${item.claim}"</span>
+        </div>
+        <div class="outdated-item-body">
+          <div class="outdated-issue"><strong>Issue:</strong> ${item.issue}</div>
+          <div class="current-guidance-box">
+            <div class="current-guidance-label">Current Guidance</div>
+            <div class="current-guidance-text">${item.current_guidance}</div>
+          </div>
+        </div>
+      `;
+      outdatedItemsEl.appendChild(div);
+    });
+
+    // Outdated citations
+    const outdatedCitesEl = document.getElementById('outdated-citations-list');
+    outdatedCitesEl.innerHTML = '';
+    const outdatedCites = cur.outdated_citations || [];
+    document.getElementById('outdated-citations-section').hidden = outdatedCites.length === 0;
+    outdatedCites.forEach(c => {
+      const li = document.createElement('li');
+      li.textContent = c;
+      outdatedCitesEl.appendChild(li);
+    });
+
+    // Confirmed current
+    const confirmedEl = document.getElementById('confirmed-current-list');
+    confirmedEl.innerHTML = '';
+    const confirmed = cur.confirmed_current || [];
+    document.getElementById('confirmed-current-section').hidden = confirmed.length === 0;
+    confirmed.forEach(c => {
+      const li = document.createElement('li');
+      li.textContent = c;
+      confirmedEl.appendChild(li);
+    });
+
+    document.getElementById('currency-summary').textContent = cur.summary || '';
+
     // Reset result tabs to Summary
     document.querySelectorAll('.result-tab').forEach(b => b.classList.remove('active'));
     document.querySelectorAll('.result-panel').forEach(p => p.classList.remove('active'));
@@ -446,5 +517,20 @@
     if (l === 'adequate')   return 'label-adequate';
     if (l === 'weak')       return 'label-weak';
     return 'label-incomplete';
+  }
+
+  function currencyColor(score) {
+    if (score >= 85) return '#7c3aed';
+    if (score >= 70) return '#0ea5e9';
+    if (score >= 50) return '#d97706';
+    return '#dc2626';
+  }
+
+  function currencyLabelClass(label) {
+    const l = (label || '').toLowerCase();
+    if (l === 'current')                  return 'currency-current';
+    if (l === 'mostly current')           return 'currency-mostly-current';
+    if (l === 'some outdated content')    return 'currency-some-outdated';
+    return 'currency-significantly-outdated';
   }
 })();

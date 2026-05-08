@@ -187,6 +187,26 @@ Return this exact JSON structure (fill in all fields):
       "List the most important clinical elements that are completely absent and would be expected in any competent paper on this topic"
     ],
     "summary": "2-3 sentence overall assessment of clinical completeness and accuracy."
+  }},
+  "currency_check": {{
+    "overall_currency": "Current",
+    "currency_score": 88,
+    "outdated_items": [
+      {{
+        "claim": "Exact quote or close paraphrase of what the student wrote",
+        "issue": "Why this is outdated — which guideline or study it conflicts with and when it was superseded",
+        "current_guidance": "What the current evidence-based recommendation actually says, citing the specific guideline or organization if possible (e.g. AAP 2023, PALS 2020, WHO 2022)",
+        "severity": "High"
+      }}
+    ],
+    "outdated_citations": [
+      "Description of any references cited by the student that are outdated given more recent evidence — e.g. 'Cites a 2004 study on antibiotic dosing; AAP revised these recommendations in 2021'"
+    ],
+    "confirmed_current": [
+      "Specific things the student correctly stated that align with current guidelines — e.g. 'Correctly recommends amoxicillin as first-line per AAP 2023 CAP guidelines'"
+    ],
+    "knowledge_cutoff_note": "This currency check reflects medical guidelines and evidence available up to the AI knowledge cutoff. Very recent guideline updates may not be captured. Always verify critical recommendations against live sources such as AAP, CDC, UpToDate, or Cochrane.",
+    "summary": "2-3 sentence assessment of how current the paper's medical information is and what the most important currency issues are."
   }}
 }}
 
@@ -205,11 +225,23 @@ Rules for each field:
 - clinical_completeness checklist: tailor ALL items specifically to the condition identified — do not use generic items; each element should name what is expected for THIS diagnosis in a pediatric nursing context
 - clinical_completeness.clinical_concerns: if there is nothing wrong or irrelevant, return an empty array []
 - clinical_completeness.critical_omissions: list only truly critical gaps, not minor ones; if paper is comprehensive return []
-- Be direct and frank about clinical_concerns — if a student wrote something dangerous or nonsensical, say so clearly"""
+- Be direct and frank about clinical_concerns — if a student wrote something dangerous or nonsensical, say so clearly
+- currency_check.overall_currency: MUST be one of: "Current", "Mostly Current", "Some Outdated Content", "Significantly Outdated"
+- currency_check.currency_score: integer 0-100 (100 = fully current; 0 = dangerously out of date)
+- currency_check.outdated_items.severity: MUST be one of: "High", "Medium", "Low"
+  - High = clinically significant error that could affect patient safety if applied
+  - Medium = deviates from current guidelines but not immediately dangerous
+  - Low = minor currency issue (e.g. older terminology, slightly dated reference)
+- currency_check.outdated_items: be specific — name the exact claim, explain WHY it's outdated, and state the current recommendation with the authoritative source
+- currency_check.outdated_citations: flag references older than ~10 years IF newer evidence exists that changes the recommendation; don't flag old citations that are still valid
+- currency_check.confirmed_current: list 2-5 specific things the student got right per current standards — this is important for balance
+- If all content appears current, outdated_items and outdated_citations should be empty arrays []
+- Focus on pediatric-specific currency: AAP guidelines, PALS protocols, CDC vaccine schedules, WHO pediatric recommendations, and recent RCTs/meta-analyses in pediatric nursing
+- Do NOT flag content as outdated just because it's older — only flag it if the recommendation has actually changed"""
 
     message = client.messages.create(
         model="claude-sonnet-4-6",
-        max_tokens=6000,
+        max_tokens=8000,
         messages=[{"role": "user", "content": prompt}],
     )
 
