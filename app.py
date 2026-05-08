@@ -141,6 +141,52 @@ Return this exact JSON structure (fill in all fields):
     "strengths": ["Strength 1", "Strength 2", "Strength 3"],
     "improvements": ["Area for improvement 1", "Area for improvement 2"],
     "overall_feedback": "A comprehensive paragraph providing overall feedback on the paper, suitable for sharing directly with the student."
+  }},
+  "clinical_completeness": {{
+    "condition_identified": "The specific pediatric condition or clinical topic this paper is about",
+    "completeness_score": 72,
+    "completeness_label": "Adequate",
+    "checklist": [
+      {{
+        "category": "Assessment & Diagnosis",
+        "items": [
+          {{"element": "Clinical signs and symptoms", "present": true, "note": "Specific note about what was/wasn't covered"}},
+          {{"element": "Diagnostic workup (labs, imaging, cultures)", "present": false, "note": "Specific note"}},
+          {{"element": "Vital sign monitoring and interpretation", "present": true, "note": "Specific note"}}
+        ]
+      }},
+      {{
+        "category": "Treatment & Pharmacology",
+        "items": [
+          {{"element": "First-line medication(s) with dosing context", "present": true, "note": "Specific note"}},
+          {{"element": "Supportive therapies (oxygen, IV fluids, etc.)", "present": false, "note": "Specific note"}},
+          {{"element": "Pediatric-specific dosing or safety considerations", "present": false, "note": "Specific note"}}
+        ]
+      }},
+      {{
+        "category": "Nursing Interventions",
+        "items": [
+          {{"element": "Evidence-based nursing actions for this condition", "present": true, "note": "Specific note"}},
+          {{"element": "Monitoring parameters and frequency", "present": false, "note": "Specific note"}},
+          {{"element": "Escalation criteria / when to call provider", "present": false, "note": "Specific note"}}
+        ]
+      }},
+      {{
+        "category": "Patient & Family Education",
+        "items": [
+          {{"element": "Medication teaching", "present": false, "note": "Specific note"}},
+          {{"element": "Home care instructions / follow-up", "present": true, "note": "Specific note"}},
+          {{"element": "Return precautions / warning signs", "present": false, "note": "Specific note"}}
+        ]
+      }}
+    ],
+    "clinical_concerns": [
+      "Describe any specific clinical content that is factually wrong, irrelevant to this diagnosis, or potentially dangerous if applied — be direct and specific, e.g. 'Student recommends insulin administration which has no role in pneumonia management'"
+    ],
+    "critical_omissions": [
+      "List the most important clinical elements that are completely absent and would be expected in any competent paper on this topic"
+    ],
+    "summary": "2-3 sentence overall assessment of clinical completeness and accuracy."
   }}
 }}
 
@@ -153,11 +199,17 @@ Rules for each field:
 - grade.percentage: integer 0-100, must match letter_grade (A=93+, A-=90-92, B+=87-89, B=83-86, B-=80-82, C+=77-79, C=73-76, C-=70-72, D+=67-69, D=63-66, D-=60-62, F=<60)
 - criteria scores must sum to match percentage (within 1 point)
 - Be specific and actionable in all feedback fields
-- For AI detection: be nuanced — clear, polished writing alone is not evidence of AI; look for uniform sentence rhythm, lack of personal clinical insight, generic transitions, absence of specific patient/case references, and overly hedged or perfectly balanced arguments"""
+- For AI detection: be nuanced — clear, polished writing alone is not evidence of AI; look for uniform sentence rhythm, lack of personal clinical insight, generic transitions, absence of specific patient/case references, and overly hedged or perfectly balanced arguments
+- clinical_completeness.completeness_label: MUST be one of: "Excellent", "Strong", "Adequate", "Weak", "Incomplete"
+- clinical_completeness.completeness_score: integer 0-100 reflecting how completely the paper covers clinically expected content for this diagnosis
+- clinical_completeness checklist: tailor ALL items specifically to the condition identified — do not use generic items; each element should name what is expected for THIS diagnosis in a pediatric nursing context
+- clinical_completeness.clinical_concerns: if there is nothing wrong or irrelevant, return an empty array []
+- clinical_completeness.critical_omissions: list only truly critical gaps, not minor ones; if paper is comprehensive return []
+- Be direct and frank about clinical_concerns — if a student wrote something dangerous or nonsensical, say so clearly"""
 
     message = client.messages.create(
         model="claude-sonnet-4-6",
-        max_tokens=4096,
+        max_tokens=6000,
         messages=[{"role": "user", "content": prompt}],
     )
 

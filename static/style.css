@@ -268,7 +268,7 @@ p  { color: var(--slate-500); }
 /* ===== STATS ROW ===== */
 .stats-row {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(4, 1fr);
   gap: 14px;
   margin-bottom: 20px;
 }
@@ -500,12 +500,117 @@ p  { color: var(--slate-500); }
 /* ===== RESPONSIVE ===== */
 @media (max-width: 600px) {
   .meta-fields { grid-template-columns: 1fr; }
-  .stats-row { grid-template-columns: 1fr; }
+  .stats-row { grid-template-columns: 1fr 1fr; }
   .strengths-grid { grid-template-columns: 1fr; }
   .result-tabs { gap: 0; }
   .result-tab { padding: 10px 12px; font-size: 0.82rem; }
   .grade-hero { flex-direction: column; text-align: center; }
 }
+
+/* ===== CLINICAL COMPLETENESS ===== */
+.stat-clinical { color: var(--teal); }
+
+.clinical-hero {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  margin-bottom: 24px;
+  padding: 20px;
+  background: var(--slate-50);
+  border-radius: var(--radius);
+}
+.clinical-score-circle {
+  width: 80px; height: 80px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  font-weight: 900;
+  flex-shrink: 0;
+  box-shadow: 0 4px 14px rgba(0,0,0,.12);
+  color: white;
+}
+.clinical-score-circle .clinical-score-num { font-size: 1.6rem; line-height: 1; }
+.clinical-score-circle .clinical-score-pct { font-size: 0.7rem; font-weight: 600; opacity: .85; }
+.clinical-condition { font-size: 1rem; font-weight: 700; color: var(--slate-900); margin-bottom: 8px; }
+.clinical-label-badge {
+  display: inline-block;
+  padding: 3px 12px;
+  border-radius: 99px;
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+.label-excellent { background: var(--green-light); color: #166534; }
+.label-strong    { background: #dbeafe; color: #1e40af; }
+.label-adequate  { background: var(--sky-light); color: var(--sky-dark); }
+.label-weak      { background: var(--amber-light); color: #92400e; }
+.label-incomplete{ background: var(--red-light); color: #991b1b; }
+
+/* Checklist categories */
+.checklist-category { margin-bottom: 18px; }
+.checklist-cat-title {
+  font-size: 0.8rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .06em;
+  color: var(--slate-400);
+  margin-bottom: 8px;
+  padding-bottom: 4px;
+  border-bottom: 1px solid var(--slate-100);
+}
+.checklist-items { display: flex; flex-direction: column; gap: 6px; }
+.checklist-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 8px 10px;
+  border-radius: var(--radius-sm);
+  background: var(--slate-50);
+}
+.checklist-item.present { background: #f0fdf4; }
+.checklist-item.absent  { background: #fef2f2; }
+.check-icon, .x-icon {
+  width: 18px; height: 18px;
+  flex-shrink: 0;
+  margin-top: 1px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.check-icon { background: var(--green); color: white; }
+.x-icon     { background: var(--red);   color: white; }
+.check-icon svg, .x-icon svg { width: 11px; height: 11px; }
+.checklist-item-body { flex: 1; min-width: 0; }
+.checklist-element { font-size: 0.88rem; font-weight: 500; color: var(--slate-700); }
+.checklist-note { font-size: 0.78rem; color: var(--slate-400); margin-top: 2px; line-height: 1.4; }
+
+/* Concerns & omissions */
+.concerns-title { color: var(--red); }
+.omissions-title { color: var(--amber); }
+.concern-list, .omission-list { list-style: none; display: flex; flex-direction: column; gap: 8px; }
+.concern-list li, .omission-list li {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  font-size: 0.88rem;
+  line-height: 1.5;
+  padding: 10px 12px;
+  border-radius: var(--radius-sm);
+}
+.concern-list li {
+  background: var(--red-light);
+  color: #991b1b;
+  border-left: 3px solid var(--red);
+}
+.omission-list li {
+  background: var(--amber-light);
+  color: #92400e;
+  border-left: 3px solid var(--amber);
+}
+.concern-list li::before  { content: '!'; font-weight: 900; flex-shrink: 0; }
+.omission-list li::before { content: '○'; font-weight: 700; flex-shrink: 0; }
 
 /* ===== PRINT ===== */
 @media print {

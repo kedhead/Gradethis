@@ -147,6 +147,11 @@
             <div class="stat-big stat-ai" id="stat-ai-likelihood">--</div>
             <div class="stat-small" id="stat-ai-score">--% likelihood</div>
           </div>
+          <div class="stat-card" id="stat-clinical-card">
+            <div class="stat-label">Clinical Coverage</div>
+            <div class="stat-big stat-clinical" id="stat-clinical-score">--</div>
+            <div class="stat-small" id="stat-clinical-label">--</div>
+          </div>
           <div class="stat-card">
             <div class="stat-label">Word Count</div>
             <div class="stat-big stat-words" id="stat-words">--</div>
@@ -159,6 +164,7 @@
           <button class="result-tab active" data-result-tab="summary" role="tab">Summary</button>
           <button class="result-tab" data-result-tab="ai" role="tab">AI Detection</button>
           <button class="result-tab" data-result-tab="grade" role="tab">Grade &amp; Feedback</button>
+          <button class="result-tab" data-result-tab="clinical" role="tab">Clinical Check</button>
         </div>
 
         <!-- SUMMARY panel -->
@@ -244,6 +250,46 @@
 
             <h4 class="panel-subtitle">Overall Feedback</h4>
             <div class="feedback-box" id="overall-feedback"></div>
+          </div>
+        </div>
+
+        <!-- CLINICAL CHECK panel -->
+        <div class="result-panel" id="result-panel-clinical">
+          <div class="card">
+            <h3 class="panel-title">Clinical Completeness Check</h3>
+
+            <div class="clinical-hero">
+              <div class="clinical-score-circle" id="clinical-score-circle">
+                <span id="clinical-score-num">--</span>
+                <span class="clinical-score-pct">%</span>
+              </div>
+              <div>
+                <div class="clinical-condition" id="clinical-condition">Identifying condition&hellip;</div>
+                <div class="clinical-label-badge" id="clinical-label-badge"></div>
+              </div>
+            </div>
+
+            <h4 class="panel-subtitle">Coverage Checklist</h4>
+            <div id="clinical-checklist"></div>
+
+            <div id="clinical-concerns-section">
+              <h4 class="panel-subtitle concerns-title">
+                <svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/></svg>
+                Clinical Concerns &amp; Inaccuracies
+              </h4>
+              <ul id="clinical-concerns-list" class="concern-list"></ul>
+            </div>
+
+            <div id="critical-omissions-section">
+              <h4 class="panel-subtitle omissions-title">
+                <svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/></svg>
+                Critical Omissions
+              </h4>
+              <ul id="critical-omissions-list" class="omission-list"></ul>
+            </div>
+
+            <h4 class="panel-subtitle">Clinical Assessment Summary</h4>
+            <div class="feedback-box" id="clinical-summary"></div>
           </div>
         </div>
 

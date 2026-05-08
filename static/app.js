@@ -200,6 +200,13 @@
     aiLikelihood.style.color = aiColor(ai.score);
     document.getElementById('stat-ai-score').textContent = `${ai.score}% likelihood`;
 
+    // Clinical coverage stat
+    const cc = data.clinical_completeness || {};
+    const clinScoreEl = document.getElementById('stat-clinical-score');
+    clinScoreEl.textContent = `${cc.completeness_score || '--'}%`;
+    clinScoreEl.style.color = clinicalColor(cc.completeness_score || 0);
+    document.getElementById('stat-clinical-label').textContent = cc.completeness_label || '--';
+
     // Words
     document.getElementById('stat-words').textContent = (word_count || 0).toLocaleString();
 
@@ -292,6 +299,70 @@
 
     document.getElementById('overall-feedback').textContent = grade.overall_feedback;
 
+    // ── Clinical Completeness tab ──
+    const scoreCircle = document.getElementById('clinical-score-circle');
+    const cscore = cc.completeness_score || 0;
+    scoreCircle.style.background = clinicalColor(cscore);
+    document.getElementById('clinical-score-num').textContent = cscore;
+    document.getElementById('clinical-condition').textContent = cc.condition_identified || 'Condition not identified';
+
+    const labelBadge = document.getElementById('clinical-label-badge');
+    const label = cc.completeness_label || 'Incomplete';
+    labelBadge.textContent = label;
+    labelBadge.className = 'clinical-label-badge ' + clinicalLabelClass(label);
+
+    // Checklist
+    const checklistEl = document.getElementById('clinical-checklist');
+    checklistEl.innerHTML = '';
+    (cc.checklist || []).forEach(cat => {
+      const div = document.createElement('div');
+      div.className = 'checklist-category';
+      div.innerHTML = `<div class="checklist-cat-title">${cat.category}</div>`;
+      const itemsDiv = document.createElement('div');
+      itemsDiv.className = 'checklist-items';
+      (cat.items || []).forEach(item => {
+        const itemDiv = document.createElement('div');
+        itemDiv.className = `checklist-item ${item.present ? 'present' : 'absent'}`;
+        const iconSvg = item.present
+          ? `<svg viewBox="0 0 12 12" fill="none"><path d="M2 6l3 3 5-5" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>`
+          : `<svg viewBox="0 0 12 12" fill="none"><path d="M3 3l6 6M9 3l-6 6" stroke="white" stroke-width="2" stroke-linecap="round"/></svg>`;
+        itemDiv.innerHTML = `
+          <div class="${item.present ? 'check-icon' : 'x-icon'}">${iconSvg}</div>
+          <div class="checklist-item-body">
+            <div class="checklist-element">${item.element}</div>
+            ${item.note ? `<div class="checklist-note">${item.note}</div>` : ''}
+          </div>
+        `;
+        itemsDiv.appendChild(itemDiv);
+      });
+      div.appendChild(itemsDiv);
+      checklistEl.appendChild(div);
+    });
+
+    // Clinical concerns
+    const concernsList = document.getElementById('clinical-concerns-list');
+    concernsList.innerHTML = '';
+    const concerns = cc.clinical_concerns || [];
+    document.getElementById('clinical-concerns-section').hidden = concerns.length === 0;
+    concerns.forEach(c => {
+      const li = document.createElement('li');
+      li.textContent = c;
+      concernsList.appendChild(li);
+    });
+
+    // Critical omissions
+    const omissionsList = document.getElementById('critical-omissions-list');
+    omissionsList.innerHTML = '';
+    const omissions = cc.critical_omissions || [];
+    document.getElementById('critical-omissions-section').hidden = omissions.length === 0;
+    omissions.forEach(o => {
+      const li = document.createElement('li');
+      li.textContent = o;
+      omissionsList.appendChild(li);
+    });
+
+    document.getElementById('clinical-summary').textContent = cc.summary || '';
+
     // Reset result tabs to Summary
     document.querySelectorAll('.result-tab').forEach(b => b.classList.remove('active'));
     document.querySelectorAll('.result-panel').forEach(p => p.classList.remove('active'));
@@ -359,5 +430,21 @@
     if (pct >= 70) return '#0ea5e9';
     if (pct >= 55) return '#d97706';
     return '#dc2626';
+  }
+
+  function clinicalColor(score) {
+    if (score >= 85) return '#0f766e';
+    if (score >= 70) return '#0ea5e9';
+    if (score >= 55) return '#d97706';
+    return '#dc2626';
+  }
+
+  function clinicalLabelClass(label) {
+    const l = (label || '').toLowerCase();
+    if (l === 'excellent')  return 'label-excellent';
+    if (l === 'strong')     return 'label-strong';
+    if (l === 'adequate')   return 'label-adequate';
+    if (l === 'weak')       return 'label-weak';
+    return 'label-incomplete';
   }
 })();
