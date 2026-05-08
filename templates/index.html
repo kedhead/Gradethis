@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>GradeThis &mdash; Pediatric Nursing Paper Analyzer</title>
+  <link rel="stylesheet" href="/static/style.css" />
+</head>
+<body>
+  <!-- HEADER -->
+  <header class="header">
+    <div class="container header-inner">
+      <div class="logo">
+        <svg class="logo-icon" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <circle cx="20" cy="20" r="20" fill="#0ea5e9"/>
+          <path d="M20 10 L20 30 M10 20 L30 20" stroke="white" stroke-width="3.5" stroke-linecap="round"/>
+          <circle cx="20" cy="20" r="4" fill="white"/>
+        </svg>
+        <div>
+          <span class="logo-name">GradeThis</span>
+          <span class="logo-tagline">Pediatric Nursing Paper Analyzer</span>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main class="main">
+    <div class="container">
+
+      <!-- ===== UPLOAD SECTION ===== -->
+      <section class="card" id="upload-section">
+        <h2 class="section-title">Analyze a Student Paper</h2>
+        <p class="section-sub">Upload a PDF or Word doc, paste a Google Docs link, or paste the paper text directly.</p>
+
+        <!-- Input type tabs -->
+        <div class="input-tabs" role="tablist">
+          <button class="tab-btn active" data-tab="file" role="tab" aria-selected="true">
+            <svg viewBox="0 0 20 20" fill="currentColor"><path d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4z"/></svg>
+            Upload File
+          </button>
+          <button class="tab-btn" data-tab="gdocs" role="tab" aria-selected="false">
+            <svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M12.586 4.586a2 2 0 112.828 2.828l-3 3a2 2 0 01-2.828 0 1 1 0 00-1.414 1.414 4 4 0 005.656 0l3-3a4 4 0 00-5.656-5.656l-1.5 1.5a1 1 0 101.414 1.414l1.5-1.5zm-5 5a2 2 0 012.828 0 1 1 0 101.414-1.414 4 4 0 00-5.656 0l-3 3a4 4 0 105.656 5.656l1.5-1.5a1 1 0 10-1.414-1.414l-1.5 1.5a2 2 0 11-2.828-2.828l3-3z" clip-rule="evenodd"/></svg>
+            Google Docs
+          </button>
+          <button class="tab-btn" data-tab="text" role="tab" aria-selected="false">
+            <svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M4 4a2 2 0 012-2h8a2 2 0 012 2v12a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm3 1h6v4H7V5zm8 8v2h1v1H4v-1h1v-2a1 1 0 011-1h8a1 1 0 011 1zM9 5v4h2V5H9z" clip-rule="evenodd"/></svg>
+            Paste Text
+          </button>
+        </div>
+
+        <!-- File upload panel -->
+        <div class="tab-panel active" id="panel-file">
+          <div class="dropzone" id="dropzone">
+            <input type="file" id="file-input" accept=".pdf,.docx,.doc" hidden />
+            <svg class="upload-icon" viewBox="0 0 48 48" fill="none">
+              <rect width="48" height="48" rx="24" fill="#e0f2fe"/>
+              <path d="M24 14v14M17 21l7-7 7 7" stroke="#0ea5e9" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M14 34h20" stroke="#0ea5e9" stroke-width="2.5" stroke-linecap="round"/>
+            </svg>
+            <p class="drop-title">Drag &amp; drop your file here</p>
+            <p class="drop-or">or</p>
+            <button type="button" class="btn-outline" id="browse-btn">Browse Files</button>
+            <p class="drop-hint">PDF, DOCX, DOC &mdash; up to 16 MB</p>
+          </div>
+          <div class="file-selected" id="file-selected" hidden>
+            <svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4z" clip-rule="evenodd"/></svg>
+            <span id="file-name-display"></span>
+            <button type="button" class="remove-file" id="remove-file" title="Remove file">&times;</button>
+          </div>
+        </div>
+
+        <!-- Google Docs panel -->
+        <div class="tab-panel" id="panel-gdocs">
+          <label class="field-label" for="gdocs-url">Google Docs URL</label>
+          <input type="url" id="gdocs-url" class="text-input" placeholder="https://docs.google.com/document/d/..."/>
+          <p class="field-hint">The document must be shared as <strong>Anyone with the link can view</strong>.</p>
+        </div>
+
+        <!-- Paste text panel -->
+        <div class="tab-panel" id="panel-text">
+          <label class="field-label" for="paste-text">Paper Text</label>
+          <textarea id="paste-text" class="textarea" rows="10" placeholder="Paste the full paper text here..."></textarea>
+        </div>
+
+        <!-- Optional metadata -->
+        <div class="meta-fields">
+          <div class="field-group">
+            <label class="field-label" for="student-name">Student Name <span class="optional">(optional)</span></label>
+            <input type="text" id="student-name" class="text-input" placeholder="e.g. Jane Smith" />
+          </div>
+          <div class="field-group">
+            <label class="field-label" for="assignment-title">Assignment Title <span class="optional">(optional)</span></label>
+            <input type="text" id="assignment-title" class="text-input" placeholder="e.g. Evidence-Based Practice Paper" />
+          </div>
+        </div>
+        <div class="field-group">
+          <label class="field-label" for="assignment-context">
+            Assignment Instructions / Grading Context <span class="optional">(optional but improves accuracy)</span>
+          </label>
+          <textarea id="assignment-context" class="textarea" rows="3"
+            placeholder="Paste the assignment prompt or describe what the paper should cover, e.g. 'Students must identify an evidence-based intervention for a pediatric condition and apply nursing theory.'"></textarea>
+        </div>
+
+        <button type="button" class="btn-primary" id="analyze-btn">
+          <svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg>
+          Analyze Paper
+        </button>
+      </section>
+
+      <!-- ===== LOADING ===== -->
+      <section class="card loading-card" id="loading-section" hidden>
+        <div class="spinner"></div>
+        <h3>Analyzing Paper&hellip;</h3>
+        <p id="loading-msg">This usually takes 20&ndash;40 seconds.</p>
+      </section>
+
+      <!-- ===== ERROR ===== -->
+      <div class="error-banner" id="error-banner" hidden>
+        <svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/></svg>
+        <span id="error-text"></span>
+      </div>
+
+      <!-- ===== RESULTS ===== -->
+      <section id="results-section" hidden>
+
+        <!-- Results header -->
+        <div class="results-header">
+          <div>
+            <h2 class="section-title" id="results-title">Analysis Results</h2>
+            <p class="section-sub" id="results-subtitle"></p>
+          </div>
+          <button class="btn-outline" onclick="window.print()">
+            <svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5 4v3H4a2 2 0 00-2 2v6a2 2 0 002 2h1v2a1 1 0 001 1h8a1 1 0 001-1v-2h1a2 2 0 002-2V9a2 2 0 00-2-2h-1V4a1 1 0 00-1-1H6a1 1 0 00-1 1zm2 0h6v3H7V4zm-1 9a1 1 0 100 2h8a1 1 0 100-2H6z" clip-rule="evenodd"/></svg>
+            Print
+          </button>
+        </div>
+
+        <!-- Quick stat cards -->
+        <div class="stats-row">
+          <div class="stat-card" id="stat-grade-card">
+            <div class="stat-label">Grade</div>
+            <div class="stat-big" id="stat-letter">--</div>
+            <div class="stat-small" id="stat-pct">--</div>
+          </div>
+          <div class="stat-card" id="stat-ai-card">
+            <div class="stat-label">AI Detection</div>
+            <div class="stat-big stat-ai" id="stat-ai-likelihood">--</div>
+            <div class="stat-small" id="stat-ai-score">--% likelihood</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Word Count</div>
+            <div class="stat-big stat-words" id="stat-words">--</div>
+            <div class="stat-small">words analyzed</div>
+          </div>
+        </div>
+
+        <!-- Result tabs -->
+        <div class="result-tabs" role="tablist">
+          <button class="result-tab active" data-result-tab="summary" role="tab">Summary</button>
+          <button class="result-tab" data-result-tab="ai" role="tab">AI Detection</button>
+          <button class="result-tab" data-result-tab="grade" role="tab">Grade &amp; Feedback</button>
+        </div>
+
+        <!-- SUMMARY panel -->
+        <div class="result-panel active" id="result-panel-summary">
+          <div class="card">
+            <h3 class="panel-title">Paper Summary</h3>
+            <p id="full-summary" class="summary-text"></p>
+            <h4 class="panel-subtitle">Key Points</h4>
+            <ul id="key-points" class="bullet-list"></ul>
+            <h4 class="panel-subtitle">Conclusion</h4>
+            <p id="conclusion-text" class="summary-text muted"></p>
+          </div>
+        </div>
+
+        <!-- AI DETECTION panel -->
+        <div class="result-panel" id="result-panel-ai">
+          <div class="card">
+            <h3 class="panel-title">AI Detection Analysis</h3>
+
+            <div class="ai-warning">
+              <svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/></svg>
+              <span>AI detection is not 100% accurate and should be used as one data point alongside your own professional judgment. No student should be disciplined based solely on this score.</span>
+            </div>
+
+            <div class="meter-section">
+              <div class="meter-labels">
+                <span>Human Written</span>
+                <span>AI Generated</span>
+              </div>
+              <div class="meter-track">
+                <div class="meter-fill" id="ai-meter-fill"></div>
+              </div>
+              <div class="meter-badge" id="ai-badge"></div>
+            </div>
+
+            <div class="ai-meta">
+              <span class="meta-chip" id="ai-confidence-chip"></span>
+              <span class="meta-chip neutral" id="ai-score-chip"></span>
+            </div>
+
+            <h4 class="panel-subtitle">Observations</h4>
+            <ul id="ai-indicators" class="bullet-list"></ul>
+
+            <h4 class="panel-subtitle">Detailed Explanation</h4>
+            <p id="ai-explanation" class="summary-text"></p>
+          </div>
+        </div>
+
+        <!-- GRADE panel -->
+        <div class="result-panel" id="result-panel-grade">
+          <div class="card">
+            <h3 class="panel-title">Grade Breakdown</h3>
+
+            <div class="grade-hero">
+              <div class="grade-circle" id="grade-circle">
+                <span id="grade-circle-letter">A</span>
+              </div>
+              <div>
+                <div class="grade-pct-big" id="grade-pct-big">-- %</div>
+                <div class="grade-rubric-note">Standard Nursing Paper Rubric</div>
+              </div>
+            </div>
+
+            <h4 class="panel-subtitle">Rubric Criteria</h4>
+            <div id="criteria-list" class="criteria-list"></div>
+
+            <div class="strengths-grid">
+              <div>
+                <h4 class="panel-subtitle strengths-title">
+                  <svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg>
+                  Strengths
+                </h4>
+                <ul id="strengths-list" class="bullet-list green"></ul>
+              </div>
+              <div>
+                <h4 class="panel-subtitle improvements-title">
+                  <svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/></svg>
+                  Areas for Improvement
+                </h4>
+                <ul id="improvements-list" class="bullet-list amber"></ul>
+              </div>
+            </div>
+
+            <h4 class="panel-subtitle">Overall Feedback</h4>
+            <div class="feedback-box" id="overall-feedback"></div>
+          </div>
+        </div>
+
+        <div class="analyze-another">
+          <button class="btn-outline" id="analyze-another-btn">
+            <svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z" clip-rule="evenodd"/></svg>
+            Analyze Another Paper
+          </button>
+        </div>
+
+      </section>
+    </div>
+  </main>
+
+  <footer class="footer">
+    <div class="container">
+      <p>GradeThis &mdash; Built for pediatric nursing educators. AI analysis is advisory only and should complement, not replace, instructor judgment.</p>
+    </div>
+  </footer>
+
+  <script src="/static/app.js"></script>
+</body>
+</html>
