@@ -101,6 +101,24 @@
             placeholder="Paste the assignment prompt or describe what the paper should cover, e.g. 'Students must identify an evidence-based intervention for a pediatric condition and apply nursing theory.'"></textarea>
         </div>
 
+        <!-- Rubric builder -->
+        <div class="rubric-builder">
+          <div class="rubric-builder-header">
+            <label class="field-label" style="margin-bottom:0">Grading Rubric</label>
+            <div class="rubric-presets">
+              <button type="button" class="rubric-preset-btn active" data-preset="nursing">Standard Nursing</button>
+              <button type="button" class="rubric-preset-btn" data-preset="research">Research Paper</button>
+              <button type="button" class="rubric-preset-btn" data-preset="casestudy">Case Study</button>
+              <button type="button" class="rubric-preset-btn" data-preset="custom">Custom</button>
+            </div>
+          </div>
+          <div class="rubric-criteria" id="rubric-criteria"></div>
+          <div class="rubric-footer">
+            <button type="button" class="rubric-add-btn" id="rubric-add-btn">+ Add Criterion</button>
+            <span class="rubric-total" id="rubric-total">Total: 100 / 100 pts</span>
+          </div>
+        </div>
+
         <button type="button" class="btn-primary" id="analyze-btn">
           <svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg>
           Analyze Paper
@@ -225,7 +243,7 @@
               </div>
               <div>
                 <div class="grade-pct-big" id="grade-pct-big">-- %</div>
-                <div class="grade-rubric-note">Standard Nursing Paper Rubric</div>
+                <div class="grade-rubric-note" id="grade-rubric-note">Standard Nursing Rubric</div>
               </div>
             </div>
 

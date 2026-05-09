@@ -21,6 +21,14 @@ ALLOWED_EXTENSIONS = {"pdf", "docx", "doc"}
 
 MAX_TEXT_LENGTH = 25000  # ~15k words, covers most student papers
 
+DEFAULT_RUBRIC = [
+    {"name": "Clinical Accuracy & Evidence-Based Practice", "max": 25},
+    {"name": "Critical Analysis & Nursing Application", "max": 25},
+    {"name": "Organization & Logical Flow", "max": 20},
+    {"name": "Scholarly Sources & Citations", "max": 15},
+    {"name": "Writing Quality & Professionalism", "max": 15},
+]
+
 
 def allowed_file(filename):
     return "." in filename and filename.rsplit(".", 1)[1].lower() in ALLOWED_EXTENSIONS
@@ -58,10 +66,13 @@ def extract_text_from_google_docs(url):
     return resp.text.strip()
 
 
-def analyze_paper_with_claude(text, student_name="", assignment_title="", assignment_context=""):
+def analyze_paper_with_claude(text, student_name="", assignment_title="", assignment_context="", rubric=None):
     api_key = os.getenv("ANTHROPIC_API_KEY")
     if not api_key:
         raise ValueError("ANTHROPIC_API_KEY is not configured. Please add it to your .env file.")
+
+    if not rubric:
+        rubric = DEFAULT_RUBRIC
 
     client = anthropic.Anthropic(api_key=api_key)
 
@@ -79,6 +90,21 @@ def analyze_paper_with_claude(text, student_name="", assignment_title="", assign
         f"Assignment context/instructions: {assignment_context}"
         if assignment_context
         else "Assignment context: General pediatric nursing paper"
+    )
+
+    # Build dynamic criteria block — use the exact criterion name as the JSON key
+    crit_lines = []
+    for item in rubric:
+        ex_score = round(item["max"] * 0.85)
+        crit_lines.append(
+            f'      "{item["name"]}": {{"score": {ex_score}, "max": {item["max"]}, "feedback": "Specific feedback on this criterion..."}}'
+        )
+    criteria_block = ",\n".join(crit_lines)
+
+    total_pts = sum(item["max"] for item in rubric)
+    rubric_rules = "\n".join(
+        f'- Criterion "{item["name"]}": score must be integer 0-{item["max"]}'
+        for item in rubric
     )
 
     prompt = f"""You are an expert academic evaluator for a pediatrics nursing program at the university level. Analyze the following student paper thoroughly and return ONLY valid JSON — no markdown, no extra text, just the JSON object.
@@ -112,31 +138,7 @@ Return this exact JSON structure (fill in all fields):
     "letter_grade": "B+",
     "percentage": 87,
     "criteria": {{
-      "clinical_accuracy": {{
-        "score": 22,
-        "max": 25,
-        "feedback": "Specific feedback on clinical accuracy and evidence-based content..."
-      }},
-      "critical_analysis": {{
-        "score": 21,
-        "max": 25,
-        "feedback": "Specific feedback on critical thinking and application to nursing..."
-      }},
-      "organization": {{
-        "score": 17,
-        "max": 20,
-        "feedback": "Specific feedback on structure and logical flow..."
-      }},
-      "sources_citations": {{
-        "score": 13,
-        "max": 15,
-        "feedback": "Specific feedback on use of scholarly sources and citations..."
-      }},
-      "writing_quality": {{
-        "score": 14,
-        "max": 15,
-        "feedback": "Specific feedback on writing clarity and professionalism..."
-      }}
+{criteria_block}
     }},
     "strengths": ["Strength 1", "Strength 2", "Strength 3"],
     "improvements": ["Area for improvement 1", "Area for improvement 2"],
@@ -217,7 +219,9 @@ Rules for each field:
 - ai_detection.indicators: list 2-5 specific textual observations (both human and AI signals)
 - grade.letter_grade: MUST be one of: "A+", "A", "A-", "B+", "B", "B-", "C+", "C", "C-", "D+", "D", "D-", "F"
 - grade.percentage: integer 0-100, must match letter_grade (A=93+, A-=90-92, B+=87-89, B=83-86, B-=80-82, C+=77-79, C=73-76, C-=70-72, D+=67-69, D=63-66, D-=60-62, F=<60)
-- criteria scores must sum to match percentage (within 1 point)
+- grade.criteria: use EXACTLY these criterion names as JSON keys (case-sensitive): {', '.join(f'"{item["name"]}"' for item in rubric)}
+{rubric_rules}
+- All criterion scores must sum to approximately match percentage × {total_pts} / 100 (within 1 point)
 - Be specific and actionable in all feedback fields
 - For AI detection: be nuanced — clear, polished writing alone is not evidence of AI; look for uniform sentence rhythm, lack of personal clinical insight, generic transitions, absence of specific patient/case references, and overly hedged or perfectly balanced arguments
 - clinical_completeness.completeness_label: MUST be one of: "Excellent", "Strong", "Adequate", "Weak", "Incomplete"
@@ -269,8 +273,20 @@ def analyze():
         student_name = request.form.get("student_name", "").strip()
         assignment_title = request.form.get("assignment_title", "").strip()
         assignment_context = request.form.get("assignment_context", "").strip()
+        rubric_name = request.form.get("rubric_name", "Custom Rubric").strip()
         input_type = request.form.get("input_type", "file")
         text = ""
+
+        # Parse rubric from form data
+        rubric = None
+        rubric_json = request.form.get("rubric", "").strip()
+        if rubric_json:
+            try:
+                rubric = json.loads(rubric_json)
+                if not isinstance(rubric, list) or not rubric:
+                    rubric = None
+            except (json.JSONDecodeError, ValueError):
+                rubric = None
 
         if input_type == "file":
             if "file" not in request.files:
@@ -313,10 +329,11 @@ def analyze():
         if not text or len(text.strip()) < 100:
             return jsonify({"error": "The paper appears to be empty or too short to analyze (minimum ~100 characters)."}), 400
 
-        result = analyze_paper_with_claude(text, student_name, assignment_title, assignment_context)
+        result = analyze_paper_with_claude(text, student_name, assignment_title, assignment_context, rubric)
         result["word_count"] = len(text.split())
         result["student_name"] = student_name
         result["assignment_title"] = assignment_title
+        result["rubric_name"] = rubric_name
         return jsonify(result)
 
     except ValueError as e:

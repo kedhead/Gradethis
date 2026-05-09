@@ -5,6 +5,45 @@
   // ── State ──────────────────────────────────────────────────────────────
   let selectedFile = null;
   let activeInputTab = 'file';
+  let activePreset = 'nursing';
+
+  // ── Rubric presets ──────────────────────────────────────────────────────
+  const PRESETS = {
+    nursing: {
+      label: 'Standard Nursing',
+      criteria: [
+        { name: 'Clinical Accuracy & Evidence-Based Practice', max: 25 },
+        { name: 'Critical Analysis & Nursing Application', max: 25 },
+        { name: 'Organization & Logical Flow', max: 20 },
+        { name: 'Scholarly Sources & Citations', max: 15 },
+        { name: 'Writing Quality & Professionalism', max: 15 },
+      ],
+    },
+    research: {
+      label: 'Research Paper',
+      criteria: [
+        { name: 'Thesis & Argument', max: 25 },
+        { name: 'Research & Evidence', max: 25 },
+        { name: 'Analysis & Interpretation', max: 20 },
+        { name: 'Citations & Format', max: 15 },
+        { name: 'Writing & Clarity', max: 15 },
+      ],
+    },
+    casestudy: {
+      label: 'Case Study',
+      criteria: [
+        { name: 'Case Presentation & Assessment', max: 25 },
+        { name: 'Clinical Reasoning & Diagnosis', max: 25 },
+        { name: 'Nursing Interventions & Plan', max: 20 },
+        { name: 'Evidence-Based Rationale', max: 15 },
+        { name: 'Professional Communication', max: 15 },
+      ],
+    },
+    custom: {
+      label: 'Custom',
+      criteria: [],
+    },
+  };
 
   // ── Element refs ────────────────────────────────────────────────────────
   const uploadSection   = document.getElementById('upload-section');
@@ -20,7 +59,7 @@
   const fileNameDisplay = document.getElementById('file-name-display');
   const removeFileBtn   = document.getElementById('remove-file');
 
-  const analyzeBtn      = document.getElementById('analyze-btn');
+  const analyzeBtn        = document.getElementById('analyze-btn');
   const analyzeAnotherBtn = document.getElementById('analyze-another-btn');
 
   // ── Input tabs ──────────────────────────────────────────────────────────
@@ -107,17 +146,110 @@
     fileSelected.hidden = true;
   }
 
+  // ── Rubric builder ───────────────────────────────────────────────────────
+  function initRubricBuilder() {
+    document.querySelectorAll('.rubric-preset-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.rubric-preset-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        activePreset = btn.dataset.preset;
+        populateRubric(PRESETS[activePreset].criteria);
+      });
+    });
+
+    document.getElementById('rubric-add-btn').addEventListener('click', () => {
+      addCriterionRow('', 10);
+      updateRubricTotal();
+      // Switch to Custom preset indicator
+      document.querySelectorAll('.rubric-preset-btn').forEach(b => b.classList.remove('active'));
+      document.querySelector('[data-preset="custom"]').classList.add('active');
+      activePreset = 'custom';
+    });
+
+    populateRubric(PRESETS.nursing.criteria);
+  }
+
+  function populateRubric(criteria) {
+    const criteriaEl = document.getElementById('rubric-criteria');
+    criteriaEl.innerHTML = '';
+    criteria.forEach(c => addCriterionRow(c.name, c.max));
+    updateRubricTotal();
+  }
+
+  function addCriterionRow(name, max) {
+    const criteriaEl = document.getElementById('rubric-criteria');
+    const row = document.createElement('div');
+    row.className = 'rubric-row';
+
+    const nameInput = document.createElement('input');
+    nameInput.type = 'text';
+    nameInput.className = 'rubric-name-input';
+    nameInput.value = name;
+    nameInput.placeholder = 'Criterion name';
+
+    const ptsInput = document.createElement('input');
+    ptsInput.type = 'number';
+    ptsInput.className = 'rubric-pts-input';
+    ptsInput.value = max;
+    ptsInput.min = 1;
+    ptsInput.max = 100;
+
+    const removeBtn = document.createElement('button');
+    removeBtn.type = 'button';
+    removeBtn.className = 'rubric-remove-btn';
+    removeBtn.title = 'Remove criterion';
+    removeBtn.textContent = '×';
+
+    ptsInput.addEventListener('input', updateRubricTotal);
+    removeBtn.addEventListener('click', () => {
+      row.remove();
+      updateRubricTotal();
+    });
+
+    row.appendChild(nameInput);
+    row.appendChild(ptsInput);
+    row.appendChild(removeBtn);
+    criteriaEl.appendChild(row);
+  }
+
+  function updateRubricTotal() {
+    const total = Array.from(document.querySelectorAll('.rubric-pts-input'))
+      .reduce((sum, el) => sum + (parseInt(el.value) || 0), 0);
+    const totalEl = document.getElementById('rubric-total');
+    totalEl.textContent = `Total: ${total} / 100 pts`;
+    totalEl.className = 'rubric-total ' + (total === 100 ? 'exact' : total > 100 ? 'over' : 'under');
+  }
+
+  function getRubric() {
+    return Array.from(document.querySelectorAll('.rubric-row')).map(row => ({
+      name: row.querySelector('.rubric-name-input').value.trim() || 'Criterion',
+      max: parseInt(row.querySelector('.rubric-pts-input').value) || 0,
+    })).filter(c => c.max > 0);
+  }
+
+  function getActivePresetLabel() {
+    return PRESETS[activePreset] ? PRESETS[activePreset].label : 'Custom Rubric';
+  }
+
   // ── Analyze ──────────────────────────────────────────────────────────────
   analyzeBtn.addEventListener('click', submitAnalysis);
 
   async function submitAnalysis() {
     hideError();
 
+    const rubric = getRubric();
+    if (rubric.length === 0) {
+      showError('Please add at least one grading criterion to the rubric.');
+      return;
+    }
+
     const formData = new FormData();
     formData.append('input_type', activeInputTab);
     formData.append('student_name', document.getElementById('student-name').value.trim());
     formData.append('assignment_title', document.getElementById('assignment-title').value.trim());
     formData.append('assignment_context', document.getElementById('assignment-context').value.trim());
+    formData.append('rubric', JSON.stringify(rubric));
+    formData.append('rubric_name', getActivePresetLabel());
 
     if (activeInputTab === 'file') {
       if (!selectedFile) { showError('Please select a file to upload.'); return; }
@@ -188,36 +320,27 @@
       `${(word_count || 0).toLocaleString()} words analyzed`;
 
     // ── Stats row ──
-    // Grade stat
     const letterEl = document.getElementById('stat-letter');
     letterEl.textContent = grade.letter_grade;
     letterEl.style.color = gradeColor(grade.letter_grade);
     document.getElementById('stat-pct').textContent = `${grade.percentage}%`;
 
-    // AI stat
     const aiLikelihood = document.getElementById('stat-ai-likelihood');
     aiLikelihood.textContent = ai.likelihood;
     aiLikelihood.style.color = aiColor(ai.score);
     document.getElementById('stat-ai-score').textContent = `${ai.score}% likelihood`;
 
-    // Clinical coverage stat
     const cc = data.clinical_completeness || {};
     const clinScoreEl = document.getElementById('stat-clinical-score');
     clinScoreEl.textContent = `${cc.completeness_score || '--'}%`;
     clinScoreEl.style.color = clinicalColor(cc.completeness_score || 0);
     document.getElementById('stat-clinical-label').textContent = cc.completeness_label || '--';
 
-    // Info currency stat
     const cur = data.currency_check || {};
     const curScoreEl = document.getElementById('stat-currency-score');
     curScoreEl.textContent = `${cur.currency_score != null ? cur.currency_score : '--'}%`;
     curScoreEl.style.color = currencyColor(cur.currency_score || 0);
     document.getElementById('stat-currency-label').textContent = cur.overall_currency || '--';
-
-    // Word count moved to subtitle
-    const wordSuffix = (word_count || 0).toLocaleString() + ' words';
-    const sub = document.getElementById('results-subtitle');
-    sub.textContent = sub.textContent ? sub.textContent + ' · ' + wordSuffix : wordSuffix;
 
     // ── Summary tab ──
     document.getElementById('full-summary').textContent = summary.full_summary;
@@ -260,20 +383,12 @@
     gradeCircle.className = 'grade-circle ' + gradeCSSClass(grade.letter_grade);
     document.getElementById('grade-circle-letter').textContent = grade.letter_grade;
     document.getElementById('grade-pct-big').textContent = `${grade.percentage}%`;
+    document.getElementById('grade-rubric-note').textContent = data.rubric_name || 'Custom Rubric';
 
-    const criteriaMap = {
-      clinical_accuracy:  'Clinical Accuracy & Evidence-Based Practice',
-      critical_analysis:  'Critical Analysis & Nursing Application',
-      organization:       'Organization & Logical Flow',
-      sources_citations:  'Scholarly Sources & Citations',
-      writing_quality:    'Writing Quality & Professionalism',
-    };
-
+    // Dynamic criteria — iterate whatever keys Claude returned
     const critList = document.getElementById('criteria-list');
     critList.innerHTML = '';
-    Object.entries(criteriaMap).forEach(([key, label]) => {
-      const crit = (grade.criteria || {})[key];
-      if (!crit) return;
+    Object.entries(grade.criteria || {}).forEach(([label, crit]) => {
       const pct = Math.round((crit.score / crit.max) * 100);
       const div = document.createElement('div');
       div.className = 'criterion';
@@ -316,11 +431,10 @@
     document.getElementById('clinical-condition').textContent = cc.condition_identified || 'Condition not identified';
 
     const labelBadge = document.getElementById('clinical-label-badge');
-    const label = cc.completeness_label || 'Incomplete';
-    labelBadge.textContent = label;
-    labelBadge.className = 'clinical-label-badge ' + clinicalLabelClass(label);
+    const clabel = cc.completeness_label || 'Incomplete';
+    labelBadge.textContent = clabel;
+    labelBadge.className = 'clinical-label-badge ' + clinicalLabelClass(clabel);
 
-    // Checklist
     const checklistEl = document.getElementById('clinical-checklist');
     checklistEl.innerHTML = '';
     (cc.checklist || []).forEach(cat => {
@@ -348,7 +462,6 @@
       checklistEl.appendChild(div);
     });
 
-    // Clinical concerns
     const concernsList = document.getElementById('clinical-concerns-list');
     concernsList.innerHTML = '';
     const concerns = cc.clinical_concerns || [];
@@ -359,7 +472,6 @@
       concernsList.appendChild(li);
     });
 
-    // Critical omissions
     const omissionsList = document.getElementById('critical-omissions-list');
     omissionsList.innerHTML = '';
     const omissions = cc.critical_omissions || [];
@@ -374,9 +486,9 @@
 
     // ── Info Currency tab ──
     const curScoreCircle = document.getElementById('currency-score-circle');
-    const cscore = cur.currency_score || 0;
-    curScoreCircle.style.background = currencyColor(cscore);
-    document.getElementById('currency-score-num').textContent = cscore;
+    const curScore = cur.currency_score || 0;
+    curScoreCircle.style.background = currencyColor(curScore);
+    document.getElementById('currency-score-num').textContent = curScore;
     document.getElementById('currency-overall').textContent = cur.overall_currency || '--';
 
     const curBadge = document.getElementById('currency-overall-badge');
@@ -386,7 +498,6 @@
     document.getElementById('currency-caveat-text').textContent =
       cur.knowledge_cutoff_note || 'Verify critical recommendations against current clinical guidelines.';
 
-    // Outdated items
     const outdatedItemsEl = document.getElementById('outdated-items-list');
     outdatedItemsEl.innerHTML = '';
     const outdatedItems = cur.outdated_items || [];
@@ -410,7 +521,6 @@
       outdatedItemsEl.appendChild(div);
     });
 
-    // Outdated citations
     const outdatedCitesEl = document.getElementById('outdated-citations-list');
     outdatedCitesEl.innerHTML = '';
     const outdatedCites = cur.outdated_citations || [];
@@ -421,7 +531,6 @@
       outdatedCitesEl.appendChild(li);
     });
 
-    // Confirmed current
     const confirmedEl = document.getElementById('confirmed-current-list');
     confirmedEl.innerHTML = '';
     const confirmed = cur.confirmed_current || [];
@@ -533,4 +642,7 @@
     if (l === 'some outdated content')    return 'currency-some-outdated';
     return 'currency-significantly-outdated';
   }
+
+  // ── Init ─────────────────────────────────────────────────────────────────
+  initRubricBuilder();
 })();
