@@ -733,6 +733,21 @@ p  { color: var(--slate-500); }
 }
 .outdated-cite-list li::before { content: '📚'; flex-shrink: 0; }
 
+/* ===== HIPAA NOTICE ===== */
+.hipaa-notice {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  border-radius: var(--radius-sm);
+  padding: 12px 14px;
+  margin-top: 16px;
+}
+.hipaa-notice svg { width: 16px; height: 16px; color: var(--green); flex-shrink: 0; margin-top: 2px; }
+.hipaa-notice span { font-size: 0.82rem; color: #166534; line-height: 1.5; }
+.hipaa-notice strong { font-weight: 700; }
+
 /* ===== RUBRIC BUILDER ===== */
 .rubric-builder {
   margin-top: 20px;

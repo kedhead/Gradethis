@@ -21,6 +21,31 @@ ALLOWED_EXTENSIONS = {"pdf", "docx", "doc"}
 
 MAX_TEXT_LENGTH = 25000  # ~15k words, covers most student papers
 
+# PHI scrubbing — applied before text reaches the Claude API
+_PHI_PATTERNS = [
+    # Social Security Numbers: 123-45-6789 or 123 45 6789
+    (re.compile(r'\b\d{3}[-\s]\d{2}[-\s]\d{4}\b'), '[SSN REDACTED]'),
+    # US phone numbers in common formats
+    (re.compile(r'\b(\+1[-.\s]?)?\(?\d{3}\)?[-.\s]\d{3}[-.\s]\d{4}\b'), '[PHONE REDACTED]'),
+    # Email addresses
+    (re.compile(r'\b[A-Za-z0-9._%+\-]+@[A-Za-z0-9.\-]+\.[A-Za-z]{2,}\b'), '[EMAIL REDACTED]'),
+    # Medical Record Numbers / Patient IDs
+    (re.compile(r'\b(MRN|Medical\s+Record(?:\s+Number)?|Patient\s+ID|Chart\s+#?)\s*[:#]?\s*\d+\b', re.IGNORECASE),
+     r'\1 [ID REDACTED]'),
+    # Date of birth when explicitly labeled
+    (re.compile(r'\b(DOB|Date\s+of\s+Birth|D\.O\.B\.?)\s*[:#]?\s*\d{1,2}[/\-\.]\d{1,2}[/\-\.]\d{2,4}\b', re.IGNORECASE),
+     '[DOB REDACTED]'),
+    # Patient name when preceded by an explicit label ("Patient: Jane Doe", "Patient Name: Jane Doe")
+    (re.compile(r'\b(Patient\s*(?:Name\s*)?[:#]\s*)([A-Z][a-z]+(?:\s+[A-Z][a-z]+)+)'), r'\1[NAME REDACTED]'),
+]
+
+
+def scrub_phi(text):
+    for pattern, replacement in _PHI_PATTERNS:
+        text = pattern.sub(replacement, text)
+    return text
+
+
 DEFAULT_RUBRIC = [
     {"name": "Clinical Accuracy & Evidence-Based Practice", "max": 25},
     {"name": "Critical Analysis & Nursing Application", "max": 25},
@@ -75,6 +100,9 @@ def analyze_paper_with_claude(text, student_name="", assignment_title="", assign
         rubric = DEFAULT_RUBRIC
 
     client = anthropic.Anthropic(api_key=api_key)
+
+    # Scrub PHI before the text leaves the server
+    text = scrub_phi(text)
 
     # Truncate very long papers to avoid excessive cost while still covering the full work
     truncated = text[:MAX_TEXT_LENGTH]
