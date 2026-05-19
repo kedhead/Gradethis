@@ -112,7 +112,6 @@ def analyze_paper_with_claude(text, student_name="", assignment_title="", assign
         else ""
     )
 
-    student_info = f"Student: {student_name}" if student_name else "Student: Not provided"
     assignment_info = f"Assignment: {assignment_title}" if assignment_title else "Assignment: Not specified"
     context_info = (
         f"Assignment context/instructions: {assignment_context}"
@@ -137,7 +136,6 @@ def analyze_paper_with_claude(text, student_name="", assignment_title="", assign
 
     prompt = f"""You are an expert academic evaluator for a pediatrics nursing program at the university level. Analyze the following student paper thoroughly and return ONLY valid JSON — no markdown, no extra text, just the JSON object.
 
-{student_info}
 {assignment_info}
 {context_info}
 {truncation_note}
